@@ -1,0 +1,22 @@
+method: GREEN
+train_set:
+  # Non-DNN method will ignore this parameter 'train_set'
+  type: UBFC-PHYs
+  path: F:\datasets\UBFC-PHYs_1-12
+test_set:
+  type: UBFC-PHYs
+  path: F:\datasets\UBFC-PHYs_1-12
+compression:
+  fps: 30
+  resolution:
+    # a couple of zero means the original resolution of the video
+    height: 1920
+    width: 1080
+  codec: MPV4
+  rate: 4000
+time_slice_interval: 3 # sec
+time_step: 3 # sec
+
+
+
+
