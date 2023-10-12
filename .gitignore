@@ -3,7 +3,8 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
+config/*.yaml
+!config/config.yaml
 # Virtual Environment
 venv/
 venv2/

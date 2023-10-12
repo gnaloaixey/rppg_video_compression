@@ -1,9 +1,10 @@
 from importlib import import_module as __import_module
 from singleton_pattern import load_config as __load_config
-__config = __load_config.get_config()
+
 __train_loader = None
 __test_loader = None
 def __generate_train_loader(type):
+    __config = __load_config.get_config()
     loader_name = __config[type]['dataset']['loader']
     loader_file = __import_module(f'dataset_loader.{loader_name}')
     DatasetLoader = getattr(loader_file,'DatasetLoader')
