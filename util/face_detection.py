@@ -8,6 +8,8 @@ predictor = dlib.shape_predictor('./res/shape_predictor_68_face_landmarks.dat')
 def get_face_shape(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = detector(gray)
+    if faces == None or len(faces) <= 0:
+        return None
     for face in faces:
         shape = predictor(gray, face)
         return shape

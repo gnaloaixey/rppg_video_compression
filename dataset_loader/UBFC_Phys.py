@@ -8,8 +8,10 @@ from dataset_loader.Base import DatasetLoader as Base
 class DatasetLoader(Base):
     root = ''
     loader_name = 'UBFC_Phys'
-    def __init__(self,root) -> None:
+    data_type = 1
+    def __init__(self,root,data_type=1) -> None:
         self.root = root
+        self.data_type = data_type
         pass
     def load_data(self):
         list_of_video_path = []
@@ -23,9 +25,11 @@ class DatasetLoader(Base):
                 rgb_video_path = ''
                 ppg_data_path = ''
                 for file in files:
-                    if re.search(r'^vid_(.+)_T3\.avi$', file) :  # 找到视频文件
+                    pattern_video = re.compile(r'^vid_(.+)_(T{0})\.avi$'.format(self.data_type))
+                    pattern_bvp = re.compile(r'^bvp_(.+)_(T{0})\.csv$'.format(self.data_type))
+                    if pattern_video.search(file) :  # 找到视频文件
                         rgb_video_path = os.path.join(root, file)
-                    elif re.search(r'^bvp_(.+)_T3\.csv$', file):
+                    elif pattern_bvp.search(file):
                         ppg_data_path = os.path.join(root, file)  # PPG文件  
                 if os.path.exists(rgb_video_path) and os.path.exists(ppg_data_path):
                     list_of_video_path.append(rgb_video_path)
