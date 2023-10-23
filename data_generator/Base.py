@@ -1,10 +1,15 @@
 import cv2
+import torch
+from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 from scipy.ndimage import gaussian_filter
-from tqdm import tqdm
+from util.import_tqdm import tqdm
 from singleton_pattern import load_config
-from util.ppg_interpolat import generate_interpolated_ppg
-from util.face_detection import read_video_and_generate_factor,get_face_shape
+from util.ppg_interpolat import generate_interpolated_ppg_by_video_capture
+from util.face_detection import get_face_shape
+from util.torch_info import get_device
+from util.cache import Cache,CacheDataset
+
 class BaseDataGenerator:
     batch_size:int
     time_slice_interval:float
@@ -18,66 +23,73 @@ class BaseDataGenerator:
         pass
     def print_start_reading(self):
         print(f"Start Generator Data...")
-    def generate_tensor_data(self,data):
+    def get_tensor_dataloader(self,data:[np.array,np.array] or None,force_clear_cache = False):
+        file_hash = load_config.get_config_hash()
+        cache = Cache(file_hash)
+        if force_clear_cache:
+            cache.free()
+        if not cache.exist() or cache.size() == 0:
+            self.__generate_cache__(data,cache)
+        dataset = CacheDataset(cache)
+        print(f'dataset size: {len(dataset)}')
+        data_loader = DataLoader(dataset, batch_size=self.batch_size,num_workers=4,pin_memory=True,pin_memory_device=get_device(), shuffle=True)
+        return data_loader
+    def __generate_cache__(self,data:[np.array,np.array],cache:Cache):
         video_paths,ppgs = data
         self.print_start_reading()
         # Get video frame rate
-        fps = self.get_max_fps(video_paths)
+        fps = self.__get_max_fps__(video_paths)
         out_queue_frame_len = int(fps * self.time_step)
         factor_len = int(fps * self.time_slice_interval)
 
-        factors = list()
-        y = list()
-        progress_bar = tqdm(video_paths, desc="Progress",ncols=100)
+        dataset_index = 0
+        progress_bar = tqdm(video_paths, desc="Progress")
         for i,video_path in enumerate(progress_bar):
-            interpolated_ppg =  generate_interpolated_ppg(ppgs[i],video_path)
-            # 压缩
+            # compress
+            compressed_path = video_path
             pass
-            # 打开视频文件
-            video_capture = cv2.VideoCapture(video_path)
-            # 视频特征
+            # open video
+            video_capture = cv2.VideoCapture(compressed_path)
+            interpolated_ppg =  generate_interpolated_ppg_by_video_capture(ppgs[i],video_capture)
             # Set the frame rate of the video capture object
             video_capture.set(cv2.CAP_PROP_FPS, fps)
 
             y_queue = list()
             factor_queue = list()
-            
-            progress_video_bar = tqdm(interpolated_ppg, desc=f"Processing videos {i}",ncols=100)
+            progress_video_bar = tqdm(interpolated_ppg, desc=f"Processing videos {i+1}{' 'if i <10 else ''}")
             for ppg_strength in progress_video_bar:
                 ret, frame = video_capture.read()
                 if not ret:
-                    break
+                    continue
                 shape = get_face_shape(frame)
                 if shape == None:
                     factor_queue.clear()
                     y_queue.clear()
                     continue
-                x = self.face_factor_extraction(frame,shape)
+                x = self.__face_factor_extraction__(frame,shape)
                 factor_queue.append(x)
                 y_queue.append(ppg_strength)
                 if len(y_queue) >= factor_len:
                     y_temp = np.array(y_queue)
                     factor_temp = np.array(factor_queue)
-                    factor_temp,y_temp = self.normalization(factor_temp,y_temp)
-                    y.append(y_temp)
-                    factors.append(factor_temp)
+                    factor_temp,y_temp = self.__normalization__(factor_temp,y_temp)
+                    cache.save(factor_temp,y_temp,dataset_index)
+                    dataset_index += 1
                     y_queue = y_queue[out_queue_frame_len:]
                     factor_queue = factor_queue[out_queue_frame_len:]
-
+            progress_video_bar.clear()
+            progress_video_bar.close()
             # 删除压缩视频
             pass
-        # to tensor
-        return np.array(factors,dtype=np.float64),np.array(y,dtype=np.float64)
-        #   x:tensor,y:tensor
-    def face_factor_extraction(self,frame,shape):
-        left_eye_pt = shape.part(40)
-        right_eye_pt = shape.part(43)
+    def __face_factor_extraction__(self,frame:np.array,shape:list or None):
+        left_eye_pt = shape[40]
+        right_eye_pt = shape[43]
 
-        left_eye_x = left_eye_pt.x
-        left_eye_y = left_eye_pt.y
+        left_eye_x = left_eye_pt['x']
+        left_eye_y = left_eye_pt['y']
         
-        right_eye_x = right_eye_pt.x
-        right_eye_y = right_eye_pt.y
+        right_eye_x = right_eye_pt['x']
+        right_eye_y = right_eye_pt['y']
 
         temp = right_eye_x-left_eye_x
         proportional_length = 0
@@ -101,7 +113,7 @@ class BaseDataGenerator:
         # 计算RGB平均值
         forehead_avg = sum/count
         return forehead_avg
-    def normalization(self,X,y):
+    def __normalization__(self,X:np.array,y:np.array):
         sigma = 1
         b = gaussian_filter(X[:,0],sigma)
         g = gaussian_filter(X[:,1],sigma)
@@ -111,7 +123,7 @@ class BaseDataGenerator:
         b = (b - b.mean())/b.std()
         y = (y - y.mean())/y.std()
         return np.column_stack((r, g, b)),y
-    def get_max_fps(self,video_paths):
+    def __get_max_fps__(self,video_paths):
         max_frame_rate = -1
         for video_path in video_paths:
             cap = cv2.VideoCapture(video_path)
@@ -129,3 +141,4 @@ class BaseDataGenerator:
             # 释放视频捕获对象
             cap.release()
         return max_frame_rate
+

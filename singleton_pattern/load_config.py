@@ -1,5 +1,6 @@
 import yaml as __yaml
 import os
+from util.read_file import generate_file_hash,read_yaml_file
 # Open and read the configuration file
 
 __config  = None
@@ -7,8 +8,10 @@ __non_dnn_method_list = None
 
 __root_dir = 'config'
 __default_config_name = 'config.yaml'
-def init_config(config_name):
+__config_hash = None
+def init_config(config_name = __default_config_name):
     global __config
+    global __config_hash
     global __root_dir
     if not __config == None:
         raise RuntimeError(f"Can only run init_config once,please restart kernel.")
@@ -17,10 +20,13 @@ def init_config(config_name):
     config_path = os.path.join(__root_dir, config_name)
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"file '{config_path}' dose not exist.")
-    with open(config_path, 'r') as __yaml_file:
-        __config = __yaml.load(__yaml_file, Loader=__yaml.FullLoader)
+    __config = read_yaml_file(config_path)
+    __config_hash = generate_file_hash(config_path)
 
-
+def get_config_hash():
+    if __config_hash == None:
+        raise RuntimeError(f"Run init_config first.")
+    return __config_hash
 
 def get_config():
     if __config == None:

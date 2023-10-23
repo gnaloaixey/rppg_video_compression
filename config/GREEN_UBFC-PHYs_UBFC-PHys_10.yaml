@@ -6,11 +6,11 @@ data_format:
 train: # Non-DNN method will ignore this parameter 'train'
     dataset:
         loader: UBFC_Phys
-        path: D:\dataset\rppg\UBFC-PHYs_1-12
+        path: D:\BaiduNetdiskDownload\UBFC-PHYs_1-12
 test:
     dataset:
         loader: UBFC_Phys
-        path: D:\dataset\rppg\UBFC-PHYs_1-12
+        path: D:\BaiduNetdiskDownload\UBFC-PHYs_1-12
 compression:
     enable: False
     fps: 30

@@ -4,30 +4,27 @@ import numpy as np
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('./res/shape_predictor_68_face_landmarks.dat')
 
+def get_face(frame):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    faces = detector(gray)
+    if faces == None or len(faces) <= 0:
+        return None
+    return faces
 
 def get_face_shape(frame):
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # 计算缩放比例
+    target_width = 320
+    scale_factor = target_width / frame.shape[1]
+    target_height = int(frame.shape[0] * scale_factor)
+    # 缩放图像
+    resized_image = cv2.resize(frame, (target_width, target_height))
+
+    # 使用 dlib 获取缩放后图像的关键点
+    faces = get_face(resized_image)
+    gray = cv2.cvtColor(resized_image, cv2.COLOR_BGR2GRAY)
     faces = detector(gray)
     if faces == None or len(faces) <= 0:
         return None
     for face in faces:
         shape = predictor(gray, face)
-        return shape
-def read_video_and_generate_factor(video_path,handle):
-    factors = list()
-    video_capture = cv2.VideoCapture(video_path)
-    video_frame_count = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-    temp = None
-    while True:
-    # 打开视频文件
-        ret, frame = video_capture.read()
-        if not ret:
-            break
-        x = handle(frame)
-        if x != None:
-            temp = x
-            factors.append(x)
-        elif x == None and temp != None:
-            factors.append(temp)
-        
-    return np.array(factors,dtype=np.float64)
+        return [ {'x':int(shape.part(i).x / scale_factor), 'y':int(shape.part(i).y / scale_factor)} for i in range(shape.num_parts)]
