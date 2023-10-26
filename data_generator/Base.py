@@ -1,13 +1,13 @@
 import cv2
 import torch
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import DataLoader
 import numpy as np
 from scipy.ndimage import gaussian_filter
 from util.import_tqdm import tqdm
 from singleton_pattern import load_config
 from util.ppg_interpolat import generate_interpolated_ppg_by_video_capture
 from util.face_detection import get_face_shape
-from util.torch_info import get_device
+from util.torch_info import get_device_str
 from util.cache import Cache,CacheDataset
 
 class BaseDataGenerator:
@@ -23,7 +23,7 @@ class BaseDataGenerator:
         pass
     def print_start_reading(self):
         print(f"Start Generator Data...")
-    def get_tensor_dataloader(self,data:[np.array,np.array] or None,force_clear_cache = False):
+    def get_tensor_dataloader(self,data:[np.array,np.array] or None,force_clear_cache = False,shuffle = False,num_workers=4,pin_memory=True,):
         file_hash = load_config.get_config_hash()
         cache = Cache(file_hash)
         if force_clear_cache:
@@ -32,13 +32,16 @@ class BaseDataGenerator:
             self.__generate_cache__(data,cache)
         dataset = CacheDataset(cache)
         print(f'dataset size: {len(dataset)}')
-        data_loader = DataLoader(dataset, batch_size=self.batch_size,num_workers=4,pin_memory=True,pin_memory_device=get_device(), shuffle=True)
+        data_loader = DataLoader(dataset, batch_size=self.batch_size,
+                                 num_workers=num_workers,pin_memory=pin_memory,
+                                 pin_memory_device=get_device_str(), shuffle=shuffle)
         return data_loader
     def __generate_cache__(self,data:[np.array,np.array],cache:Cache):
         video_paths,ppgs = data
         self.print_start_reading()
         # Get video frame rate
-        fps = self.__get_max_fps__(video_paths)
+        config = load_config.get_config()
+        fps = config['data_format']['fps']
         out_queue_frame_len = int(fps * self.time_step)
         factor_len = int(fps * self.time_slice_interval)
 
@@ -123,22 +126,4 @@ class BaseDataGenerator:
         b = (b - b.mean())/b.std()
         y = (y - y.mean())/y.std()
         return np.column_stack((r, g, b)),y
-    def __get_max_fps__(self,video_paths):
-        max_frame_rate = -1
-        for video_path in video_paths:
-            cap = cv2.VideoCapture(video_path)
-            # 检查视频是否成功打开
-            if not cap.isOpened():
-                print(f"Warning: unable to open video file '{video_path}'")
-                continue
-            # 获取视频的帧率
-            frame_rate = cap.get(cv2.CAP_PROP_FPS)
-
-            # 更新最大帧率
-            if frame_rate > max_frame_rate:
-                max_frame_rate = frame_rate
-
-            # 释放视频捕获对象
-            cap.release()
-        return max_frame_rate
 

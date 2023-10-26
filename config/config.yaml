@@ -1,6 +1,7 @@
 cuda: 0
 method: GREEN
 data_format:
+    fps: 35
     batch_size: 1
     time_slice_interval: 5 # sec
     time_step: 3 # sec

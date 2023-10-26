@@ -1,10 +1,11 @@
 import pickle
 from os import path,listdir,makedirs
 import shutil
+import yaml
 import torch
 from torch.utils.data import Dataset
 from util.read_file import generate_file_hash
-
+cache_root = 'cache'
 class Cache:
     @staticmethod
     def clear_useless_cache():
@@ -12,20 +13,20 @@ class Cache:
         __cache_root = 'cache'
         if not path.exists(__cache_root) or not path.exists(__config_root):
             return
-        config_file_name = [name for name in listdir(__config_root) if path.isdir(path.join(__config_root, name))]
-        config_file_hash = [generate_file_hash(path.join(__config_root,name)) for name in config_file_name]
+        config_file_names = [name for name in listdir(__config_root) if path.isfile(path.join(__config_root, name))]
+        config_file_hashs = [generate_file_hash(path.join(__config_root,name)) for name in config_file_names]
 
         cache_file_names = [name for name in listdir(__cache_root) if path.isdir(path.join(__cache_root, name))]
         for name in cache_file_names:
-            if name not in config_file_hash:
-                # shutil.rmtree(path.join(__cache_root,name))   
+            if name not in config_file_hashs:
+                shutil.rmtree(path.join(__cache_root,name))   
                 pass         
         pass
     file_path = None
+    info_name = 'info.yaml'
     def __init__(self,file_hash) -> None:
-        __cache_root = 'cache'
-        self.file_path = path.join(__cache_root,file_hash)
-        
+        Cache.clear_useless_cache()
+        self.file_path = path.join(cache_root,file_hash)
     def exist(self) -> bool:
         return path.exists(self.file_path) and path.isdir(self.file_path)
 
@@ -57,7 +58,19 @@ class Cache:
             return 0
         subdirectories = [d for d in listdir(self.file_path) if path.isdir(path.join(self.file_path, d))]
         return len(subdirectories)
-Cache.clear_useless_cache()
+    def save_cache_info(self,key,value):
+        cache_data = {key: value}
+        with open(path.join(self.file_path,self.info_name), 'w',encoding='utf-8') as file:
+            yaml.dump(cache_data, file, default_flow_style=False)
+            file.close()
+    def get_cache_info(self,key):
+        with open(path.join(self.file_path,self.info_name), 'r',encoding='utf-8') as file:
+            cache_data = yaml.safe_load(file)
+            file.close()
+        if cache_data and key in cache_data:
+            return cache_data[key]
+        else:
+            return None
 class CacheDataset(Dataset):
     __cache:Cache
     def __init__(self, cache:Cache):

@@ -13,7 +13,7 @@ class LSTCrPPG(torch.nn.Module):
     def train_model(self,dataloader):
         self.train()
         for batch_X, batch_y in dataloader:
-            print(batch_X.shape)
+            # print(batch_X.shape)
             pass
         self.eval()
 

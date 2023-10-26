@@ -15,8 +15,10 @@ def print_info():
         print('---------------------------')
     else:
         print("PyTorch does not support GPU acceleration.")
-def get_device():
+def get_device_str():
     cuda_index = __load_config.get_config()['cuda']
     if cuda_index == None:
         cuda_index = 0
-    return __torch.device(f"cuda:{cuda_index}" if __torch.cuda.is_available() else "cpu")
+    return f"cuda:{cuda_index}" if __torch.cuda.is_available() else "cpu"
+def get_device():
+    return __torch.device(get_device_str())
