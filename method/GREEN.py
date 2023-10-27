@@ -8,7 +8,7 @@ class GREEN(torch.nn.Module):
         # x = x[:,1] # B T H W
         # B, T, H, W  = x.shape
         x = torch.mean(x, dim=(3,4))
-        return x[:,1,:].reshape(-1) 
+        return x[:,1,:].reshape(-1)
 
     def train_model(self,dataloader):
         self.train()

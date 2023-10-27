@@ -79,6 +79,6 @@ class CacheDataset(Dataset):
         return self.__cache.size()
     def __getitem__(self, index):
         X,y = self.__cache.read(index)
-        X = torch.tensor(X, dtype=torch.float64)
-        y = torch.tensor(y, dtype=torch.float64)
+        X = torch.tensor(X).float()
+        y = torch.tensor(y).float()
         return X,y
