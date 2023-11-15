@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from util.import_tqdm import tqdm
 from singleton_pattern import load_config
+from util.cache import Cache
 class PhysNet(torch.nn.Module):
     def __init__(self):
         super(PhysNet, self).__init__()
@@ -29,17 +30,18 @@ class PhysNet(torch.nn.Module):
 
         optimizer = optim.SGD(self.parameters(), lr=0.01)
 
+        cache = Cache('model')
         progress_bar = tqdm(range(self.num_epochs), desc="Progress")
         for epoch in progress_bar:
-            loss = None
             for batch_X, batch_y in dataloader:
-                outputs = self(batch_X.float())
+                outputs = self(batch_X)
                 loss = criterion(outputs, batch_y)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
             print(f'Epoch [{epoch + 1}/{self.num_epochs}], Loss: {loss.item():.4f}')
         self.eval()
+        cache.save_model(self)
         print('train end.')
 
 class EncoderBlock(torch.nn.Module):

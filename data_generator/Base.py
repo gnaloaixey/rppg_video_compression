@@ -22,8 +22,7 @@ class BaseDataGenerator:
     def print_start_reading(self):
         print(f"Start Generator Data...")
     def get_tensor_dataloader(self,data:[np.array,np.array] or None,force_clear_cache = False,shuffle = False,num_workers=4,pin_memory=True,):
-        file_hash = load_config.get_config_hash()
-        cache = Cache(file_hash,self.dataset_type)
+        cache = Cache(self.dataset_type)
         if force_clear_cache:
             cache.free()
         if not cache.exist() or cache.size() == 0:

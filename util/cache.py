@@ -5,6 +5,7 @@ import yaml
 import torch
 from torch.utils.data import Dataset
 from util.read_file import generate_file_hash
+from singleton_pattern.load_config import get_config_hash
 cache_root = 'cache'
 class Cache:
     @staticmethod
@@ -24,8 +25,10 @@ class Cache:
         pass
     file_path = None
     info_name = 'info.yaml'
-    def __init__(self,file_hash,dataset_type) -> None:
+    model_name = 'model.pkl'
+    def __init__(self,dataset_type) -> None:
         Cache.clear_useless_cache()
+        file_hash = get_config_hash()
         self.file_path = path.join(cache_root,file_hash,dataset_type)
         print(self.file_path)
     def exist(self) -> bool:
@@ -64,6 +67,18 @@ class Cache:
         with open(path.join(self.file_path,self.info_name), 'w',encoding='utf-8') as file:
             yaml.dump(cache_data, file, default_flow_style=False)
             file.close()
+    def save_model(self,model):
+        with open(path.join(dir,self.model_name), 'wb') as file:
+            pickle.dump(model, file)
+            file.close()
+    def read_model(self):
+        model_path = path.join(dir,self.model_name)
+        if not path.exists(model_path):
+            return None
+        with open(model_path, 'rb') as file:
+            model = pickle.load(file)
+            file.close()
+        return model
     def get_cache_info(self,key):
         with open(path.join(self.file_path,self.info_name), 'r',encoding='utf-8') as file:
             cache_data = yaml.safe_load(file)
