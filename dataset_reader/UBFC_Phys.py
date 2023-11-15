@@ -9,9 +9,8 @@ class DatasetReader(Base):
     root = ''
     loader_name = 'UBFC_Phys'
     data_type = 1
-    def __init__(self,root,data_type=1) -> None:
+    def __init__(self,root) -> None:
         self.root = root
-        self.data_type = data_type
         pass
     def load_data(self):
         list_of_video_path = []

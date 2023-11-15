@@ -10,7 +10,6 @@ class LSTCrPPG(torch.nn.Module):
 
     def forward(self, x):
         e = self.encoder_block(x)
-        print([i.shape for i in e])
         out = self.decoder_block(e)
         return out.squeeze()
     def train_model(self,dataloader,num_epochs = 10):
@@ -132,7 +131,10 @@ class DecoderBlock(torch.nn.Module):
     def forward(self, encoded_features):
         encoded_feature_0,encoded_feature_1,encoded_feature_2,encoded_feature_3,\
             encoded_feature_4,encoded_feature_5,encoded_feature_6 = encoded_features
-        d6 = self.decoder_block6(self.TARM(encoded_feature_1, self.decoder_block6_transpose(encoded_feature_0)))
+
+        d = self.decoder_block6_transpose(encoded_feature_0)
+        d6 = self.decoder_block6(self.TARM(encoded_feature_1, d))
+        print(d6.shape)
         d5 = self.decoder_block5(self.TARM(encoded_feature_2,self.decoder_block5_transpose(d6)))
         d4 = self.decoder_block4(self.TARM(encoded_feature_3,self.decoder_block4_transpose(d5)))
         d3 = self.decoder_block3(self.TARM(encoded_feature_4,self.decoder_block3_transpose(d4)))

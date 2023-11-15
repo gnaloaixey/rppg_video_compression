@@ -3,8 +3,8 @@ from data_generator.Base import BaseDataGenerator as Base
 import numpy as np
 class DataGenerator(Base):
     def __normalization__(self,X,y):
-        # C,T,H,W
-        X = X.transpose((3, 0, 1, 2))
+        # C,T,W,H
+        X = X.transpose((3, 0, 2, 1))
         X = X/255
         y = (y - y.min())/(y.max() -y.min())
         return X,y

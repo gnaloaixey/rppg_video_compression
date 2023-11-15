@@ -24,9 +24,10 @@ class Cache:
         pass
     file_path = None
     info_name = 'info.yaml'
-    def __init__(self,file_hash) -> None:
+    def __init__(self,file_hash,dataset_type) -> None:
         Cache.clear_useless_cache()
-        self.file_path = path.join(cache_root,file_hash)
+        self.file_path = path.join(cache_root,file_hash,dataset_type)
+        print(self.file_path)
     def exist(self) -> bool:
         return path.exists(self.file_path) and path.isdir(self.file_path)
 

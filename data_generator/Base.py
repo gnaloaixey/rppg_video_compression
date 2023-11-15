@@ -11,21 +11,19 @@ from util.torch_info import get_device_str
 from util.cache import Cache,CacheDataset
 
 class BaseDataGenerator:
-    batch_size:int
-    time_slice_interval:float
-    time_step:float
-    def __init__(self):
+    def __init__(self,dataset_type='train'):
+        self.dataset_type = dataset_type
         config = load_config.get_config()
         data_format = config['data_format']
         self.batch_size = data_format['batch_size']
-        self.time_slice_interval = data_format['time_slice_interval']
-        self.time_step = data_format['time_step']
+        self.slice_interval = data_format['slice_interval']
+        self.step = data_format['step']
         pass
     def print_start_reading(self):
         print(f"Start Generator Data...")
     def get_tensor_dataloader(self,data:[np.array,np.array] or None,force_clear_cache = False,shuffle = False,num_workers=4,pin_memory=True,):
         file_hash = load_config.get_config_hash()
-        cache = Cache(file_hash)
+        cache = Cache(file_hash,self.dataset_type)
         if force_clear_cache:
             cache.free()
         if not cache.exist() or cache.size() == 0:
@@ -42,8 +40,8 @@ class BaseDataGenerator:
         # Get video frame rate
         config = load_config.get_config()
         fps = config['data_format']['fps']
-        out_queue_frame_len = int(fps * self.time_step)
-        factor_len = int(fps * self.time_slice_interval)
+        step = int(self.step)
+        slice_interval = int(self.slice_interval)
 
         dataset_index = 0
         progress_bar = tqdm(video_paths, desc="Progress")
@@ -72,14 +70,14 @@ class BaseDataGenerator:
                 x = self.__face_factor_extraction__(frame,shape)
                 factor_queue.append(x)
                 y_queue.append(ppg_strength)
-                if len(y_queue) >= factor_len:
+                if len(y_queue) >= slice_interval:
                     y_temp = np.array(y_queue)
                     factor_temp = np.array(factor_queue)
                     factor_temp,y_temp = self.__normalization__(factor_temp,y_temp)
                     cache.save(factor_temp,y_temp,dataset_index)
                     dataset_index += 1
-                    y_queue = y_queue[out_queue_frame_len:]
-                    factor_queue = factor_queue[out_queue_frame_len:]
+                    y_queue = y_queue[step:]
+                    factor_queue = factor_queue[step:]
             progress_video_bar.clear()
             progress_video_bar.close()
             # 删除压缩视频

@@ -1,10 +1,11 @@
 cuda: 0
 method: GREEN
+num_epochs: 10
 data_format:
     fps: 35
     batch_size: 1
-    time_slice_interval: 5 # sec
-    time_step: 3 # sec
+    slice_interval: 160 # sec
+    step: 20 # sec
 train: # Non-DNN method will ignore this parameter 'train'
     dataset:
         loader: UBFC_Phys
@@ -20,10 +21,4 @@ compression:
     resolution_ratio: 0
     codec: MPV4
     rate: 4000
-efficiency_assessment: True
-draw:
-    enable: True
-    output: "@/out/test_image"
-model:
-    output: "@/out/model"
     

@@ -28,11 +28,11 @@ def get_config_hash():
         raise RuntimeError(f"Run init_config first.")
     return __config_hash
 
-def get_config():
+def get_config()->dict:
     if __config == None:
         raise RuntimeError(f"Run init_config first.")
     return __config
-def get_non_dnn_method_list():
+def get_non_dnn_method_list()->list:
     global __non_dnn_method_list
     if __non_dnn_method_list == None:
         # Method type, determine if training is needed
