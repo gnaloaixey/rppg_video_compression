@@ -38,7 +38,7 @@ class PhysNet(torch.nn.Module):
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-            print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
+            print(f'Epoch [{epoch + 1}/{self.num_epochs}], Loss: {loss.item():.4f}')
         self.eval()
         print('train end.')
 
