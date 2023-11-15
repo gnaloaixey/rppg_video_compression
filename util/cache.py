@@ -27,7 +27,7 @@ class Cache:
     info_name = 'info.yaml'
     model_name = 'model.pkl'
     def __init__(self,dataset_type) -> None:
-        Cache.clear_useless_cache()
+        # Cache.clear_useless_cache()
         file_hash = get_config_hash()
         self.file_path = path.join(cache_root,file_hash,dataset_type)
         print(self.file_path)

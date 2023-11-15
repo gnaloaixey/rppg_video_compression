@@ -32,6 +32,7 @@ class PhysNet(torch.nn.Module):
 
         cache = Cache('model')
         progress_bar = tqdm(range(self.num_epochs), desc="Progress")
+        loss = None
         for epoch in progress_bar:
             for batch_X, batch_y in dataloader:
                 outputs = self(batch_X)
