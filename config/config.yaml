@@ -4,8 +4,8 @@ num_epochs: 10
 data_format:
     fps: 35
     batch_size: 1
-    slice_interval: 160 # sec
-    step: 20 # sec
+    slice_interval: 160
+    step: 20
 train: # Non-DNN method will ignore this parameter 'train'
     dataset:
         loader: UBFC_Phys
@@ -15,7 +15,6 @@ test:
         loader: UBFC_Phys
         path: D:\BaiduNetdiskDownload\UBFC-PHYs_1-12
 compression:
-    enable: False
     fps: 30
     # zero means the original resolution of the video
     resolution_ratio: 0

@@ -67,12 +67,12 @@ class Cache:
         with open(path.join(self.file_path,self.info_name), 'w',encoding='utf-8') as file:
             yaml.dump(cache_data, file, default_flow_style=False)
             file.close()
-    def save_model(self,model):
-        with open(path.join(dir,self.model_name), 'wb') as file:
+    def save_model(self,model:torch.nn.Module):
+        with open(path.join(self.file_path,self.model_name), 'wb') as file:
             pickle.dump(model, file)
             file.close()
-    def read_model(self):
-        model_path = path.join(dir,self.model_name)
+    def read_model(self)->torch.nn.Module:
+        model_path = path.join(self.file_path,self.model_name)
         if not path.exists(model_path):
             return None
         with open(model_path, 'rb') as file:

@@ -1,7 +1,13 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.fft as fft
+from util.cache import Cache
 from util.import_tqdm import tqdm
+
+
+
+
 class LSTCrPPG(torch.nn.Module):
     def __init__(self, frames=32):
         super(LSTCrPPG, self).__init__()
@@ -12,11 +18,13 @@ class LSTCrPPG(torch.nn.Module):
         e = self.encoder_block(x)
         out = self.decoder_block(e)
         return out.squeeze()
-    def train_model(self,dataloader,num_epochs = 10):
+    def train_model(self,dataloader,num_epochs = None):
+        if num_epochs is None:
+            num_epochs = self.num_epochs
         print('start training...')
         self.train()
-
-        criterion = nn.MSELoss()
+        cache = Cache('model')
+        criterion = LSTCrPPGLoss()
 
         optimizer = optim.SGD(self.parameters(), lr=0.01)
 
@@ -24,14 +32,14 @@ class LSTCrPPG(torch.nn.Module):
         for epoch in progress_bar:
             loss = None
             for batch_X, batch_y in dataloader:
-                print(batch_X.shape)
-                outputs = self(batch_X.float())
+                outputs = self(batch_X)
                 loss = criterion(outputs, batch_y)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
             print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
         self.eval()
+        cache.save_model(self)
         print('train end.')
 class EncoderBlock(torch.nn.Module):
     def __init__(self):
@@ -165,5 +173,47 @@ class ConvBlock3D(torch.nn.Module):
 
     def forward(self, x):
         return self.conv_block_3d(x)
+
+
+class LSTCrPPGLoss(nn.Module):
+    def __init__(self):
+        super(LSTCrPPGLoss, self).__init__()
+        self.timeLoss = nn.MSELoss()
+        self.lambda_value = 0.2
+        self.alpha = 1.0
+        self.beta = 0.5
+
+    def forward(self, predictions, targets):
+        if len(predictions.shape) == 1:
+            predictions = predictions.view(1, -1)
+
+        # predictions = (predictions - torch.mean(predictions)) / torch.std(predictions)
+        # targets = (targets - torch.mean(targets)) / torch.std(targets)
+
+        targets = torch.nn.functional.normalize(targets, dim=1)
+        predictions = torch.nn.functional.normalize(predictions, dim=1)
+
+        l_time = self.timeLoss(predictions, targets)
+        l_frequency = self.frequencyLoss(predictions, targets)
+        return self.alpha * l_time + self.beta * l_frequency
+
+    def frequencyLoss(self, predictions, target):
+        batch, n = predictions.shape
+        predictions = self.calculate_rppg_psd(predictions)
+        target = self.calculate_rppg_psd(target)
+        di = torch.log(predictions) - torch.log(target)
+        sum_di_squared = torch.sum(di ** 2, dim=-1)
+        sum_di = torch.sum(di, dim=-1)
+
+        hybrid_loss = (1 / n) * sum_di_squared - (self.lambda_value / (n ** 2)) * sum_di ** 2
+        loss = torch.sum(hybrid_loss) / batch
+        return loss
+
+    def calculate_rppg_psd(self, rppg_signal):
+        spectrum = fft.fft(rppg_signal)
+        # 使用复乘法计算PSD
+        psd = torch.abs(spectrum) ** 2
+
+        return psd
 
 
