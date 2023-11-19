@@ -30,6 +30,7 @@ class Cache:
         # Cache.clear_useless_cache()
         file_hash = get_config_hash()
         self.file_path = path.join(cache_root,file_hash,dataset_type)
+        makedirs(self.file_path, exist_ok=True)
         print(self.file_path)
     def exist(self) -> bool:
         return path.exists(self.file_path) and path.isdir(self.file_path)
@@ -89,12 +90,31 @@ class Cache:
             return None
 class CacheDataset(Dataset):
     __cache:Cache
-    def __init__(self, cache:Cache):
+    __tensor_X = None
+    __tensor_y = None
+    def __init__(self, cache:Cache,load_to_memory=False):
         self.__cache = cache
+        if load_to_memory:
+            tensor_X = list()
+            tensor_y = list()
+            print('loading to memory...')
+            for index in range(cache.size()):
+                X,y = self.__cache.read(index)
+                tensor_X.append(X)
+                tensor_y.append(y)
+            self.__tensor_X = tensor_X
+            self.__tensor_y = tensor_y
+            print('load end')
     def __len__(self):
+        if self.is_load_to_memory():
+            return len(self.__tensor_y)
         return self.__cache.size()
     def __getitem__(self, index):
+        if self.is_load_to_memory():
+            return self.__tensor_X[index],self.__tensor_y[index]
         X,y = self.__cache.read(index)
         X = torch.tensor(X).float()
         y = torch.tensor(y).float()
         return X,y
+    def is_load_to_memory(self):
+        return self.__tensor_y is not None and self.__tensor_X is not None

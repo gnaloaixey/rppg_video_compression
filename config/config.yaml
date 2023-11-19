@@ -10,10 +10,12 @@ train: # Non-DNN method will ignore this parameter 'train'
     dataset:
         loader: UBFC_Phys
         path: D:\BaiduNetdiskDownload\UBFC-PHYs_1-12
+        load_to_memory: False
 test:
     dataset:
         loader: UBFC_Phys
         path: D:\BaiduNetdiskDownload\UBFC-PHYs_1-12
+        load_to_memory: False
 compression:
     fps: 30
     # zero means the original resolution of the video

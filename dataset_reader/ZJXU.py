@@ -2,12 +2,10 @@ import pandas as pd
 import numpy as np
 import os
 import re
-class DatasetReader:
+from dataset_reader.Base import BaseDatasetReader
+class DatasetReader(BaseDatasetReader):
     root = ''
     loader_name = 'ZJXU'
-    def __init__(self,root) -> None:
-        self.root = root
-        pass
     def load_data(self):
         list_of_preprocess_video_and_ppg = []
         contents = os.listdir(self.root)

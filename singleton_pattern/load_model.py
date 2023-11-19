@@ -1,9 +1,9 @@
 from importlib import import_module as __import_module
 from singleton_pattern import load_config as __load_config
-from method.TrainableMethod import TrainableMethod
+from method.TrainableModule import TrainableModule
 __map = dict()
 
-def get_model() -> TrainableMethod:
+def get_model() -> TrainableModule:
     __config = __load_config.get_config()
     method_name = __config['method']
     if method_name not in __map:

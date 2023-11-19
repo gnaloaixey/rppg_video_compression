@@ -18,6 +18,9 @@ class BaseDataGenerator:
         self.batch_size = data_format['batch_size']
         self.slice_interval = data_format['slice_interval']
         self.step = data_format['step']
+
+        self.load_to_memory = config.get(dataset_type,{}).get('dataset',{}).get('load_to_memory',False)
+        
         pass
     def print_start_reading(self):
         print(f"Start Generator Data...")
@@ -27,7 +30,7 @@ class BaseDataGenerator:
             cache.free()
         if not cache.exist() or cache.size() == 0:
             self.__generate_cache__(data,cache)
-        dataset = CacheDataset(cache)
+        dataset = CacheDataset(cache,self.load_to_memory)
         print(f'dataset size: {len(dataset)}')
         data_loader = DataLoader(dataset, batch_size=self.batch_size,
                                  num_workers=num_workers,pin_memory=pin_memory,

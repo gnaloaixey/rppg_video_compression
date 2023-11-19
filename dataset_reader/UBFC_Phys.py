@@ -4,14 +4,11 @@ from util.import_tqdm import tqdm
 import os
 import re
 
-from dataset_reader.Base import DatasetReader as Base
-class DatasetReader(Base):
+from dataset_reader.Base import BaseDatasetReader
+class DatasetReader(BaseDatasetReader):
     root = ''
     loader_name = 'UBFC_Phys'
     data_type = 1
-    def __init__(self,root) -> None:
-        self.root = root
-        pass
     def load_data(self):
         list_of_video_path = []
         list_of_ppg_data = []

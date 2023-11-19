@@ -4,13 +4,13 @@ import torch.optim as optim
 import torch.fft as fft
 from util.cache import Cache
 from util.import_tqdm import tqdm
+from method.TrainableModule import TrainableModule
 
 
 
-
-class LSTCrPPG(torch.nn.Module):
+class LSTCrPPG(TrainableModule):
     def __init__(self, frames=32):
-        super(LSTCrPPG, self).__init__()
+        super().__init__()
         self.encoder_block = EncoderBlock()
         self.decoder_block = DecoderBlock()
 

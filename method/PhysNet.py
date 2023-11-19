@@ -1,22 +1,21 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from singleton_pattern.load_config import get_config
 from util.import_tqdm import tqdm
-from singleton_pattern import load_config
 from util.cache import Cache
+from util.torch_info import get_device
 from loss.pearson import NegPearsonLoss
-class PhysNet(torch.nn.Module):
+from method.TrainableModule import TrainableModule
+import copy
+class PhysNet(TrainableModule):
     def __init__(self):
-        super(PhysNet, self).__init__()
-        config = load_config.get_config()
-        data_format = config['data_format']
-        self.num_epochs = config.get('num_epochs',10)
-        slice_interval = data_format['slice_interval']
+        super().__init__()
         self.physnet = torch.nn.Sequential(
             EncoderBlock(),
             decoder_block(),
              # torch.nn.AdaptiveMaxPool3d((slice_interval, 1, 1)),  # spatial adaptive pooling
-            torch.nn.AdaptiveAvgPool3d((slice_interval, 1, 1)),  # spatial adaptive pooling
+            torch.nn.AdaptiveAvgPool3d((self.slice_interval, 1, 1)),  # spatial adaptive pooling
             torch.nn.Conv3d(64, 1, [1, 1, 1], stride=1, padding=0)
         )
 
@@ -34,24 +33,35 @@ class PhysNet(torch.nn.Module):
 
         # optimizer = optim.SGD(self.parameters(), lr=0.01)
         optimizer = optim.Adam(self.parameters(), lr=0.01)
-
-        cache = Cache('model')
+        gpu_device = get_device()
+        self.to(gpu_device)
         progress_bar = tqdm(range(num_epochs), desc="Progress")
+        best_loss = 1
+        cache = Cache('model')
         for epoch in progress_bar:
             epoch_loss = 0
             for batch_X, batch_y in dataloader:
-                batch_X.requires_grad = True
-                batch_y.requires_grad = True
+                batch_X = batch_X.to(gpu_device)
+                batch_y = batch_y.to(gpu_device)
                 outputs = self(batch_X)
                 loss = criterion(outputs, batch_y)
                 epoch_loss += loss.item()
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-            print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss/len(dataloader):.4f}')
+            avg_loss = epoch_loss/len(dataloader)
+            print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss:.4f}')
+            if avg_loss <= best_loss:
+                best_loss = avg_loss
+                temp_model = copy.deepcopy(self)
+                temp_model.eval()
+                temp_model.to('cpu')
+                cache.save_model(temp_model)
+            if avg_loss < 0.1:
+                break
         self.eval()
-        cache.save_model(self)
-        print('train end.')
+        self.to('cpu')
+        print(f'train end.best loss {best_loss:.4f}')
 
 class EncoderBlock(torch.nn.Module):
     def __init__(self):
