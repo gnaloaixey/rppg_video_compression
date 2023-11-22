@@ -1,9 +1,8 @@
 from importlib import import_module as __import_module
 from singleton_pattern import load_config as __load_config
 from dataset_reader.Base import BaseDatasetReader
-__train_reader = None
-__test_reader = None
-def __generate_train_reader(dataset_type) -> BaseDatasetReader:
+from util.static_var import StaticVar
+def create_train_reader(dataset_type) -> BaseDatasetReader:
     config = __load_config.get_config()
     loader_name = config[dataset_type]['dataset']['loader']
     loader_file = __import_module(f'dataset_reader.{loader_name}')
@@ -11,12 +10,10 @@ def __generate_train_reader(dataset_type) -> BaseDatasetReader:
     return DataseReader(dataset_type)
 
 def get_train_reader() -> BaseDatasetReader:
-    global __train_reader
-    if __train_reader == None:
-        __train_reader = __generate_train_reader('train')
-    return __train_reader
+    if StaticVar.train_reader == None:
+        StaticVar.train_reader = create_train_reader('train')
+    return StaticVar.train_reader
 def get_test_reader() -> BaseDatasetReader:
-    global __test_reader
-    if __test_reader == None:
-        __test_reader = __generate_train_reader('test')
-    return __test_reader
+    if StaticVar.test_reader == None:
+        StaticVar.test_reader = create_train_reader('test')
+    return StaticVar.test_reader

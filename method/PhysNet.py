@@ -1,14 +1,8 @@
 import torch
-import torch.nn as nn
-import torch.optim as optim
-from singleton_pattern.load_config import get_config
-from util.import_tqdm import tqdm
-from util.cache import Cache
-from util.torch_info import get_device
-from loss.pearson import NegPearsonLoss
-from method.TrainableModule import TrainableModule
-import copy
-class PhysNet(TrainableModule):
+from method.Base import BaseMethod
+
+
+class PhysNet(BaseMethod):
     def __init__(self):
         super().__init__()
         self.physnet = torch.nn.Sequential(
@@ -22,46 +16,7 @@ class PhysNet(TrainableModule):
     def forward(self, x):
         [batch, channel, length, width, height] = x.shape
         return self.physnet(x).view(-1, length)
-    def train_model(self,dataloader,num_epochs = None):
-        if num_epochs is None:
-            num_epochs = self.num_epochs
-        print('start training...')
-        self.train()
 
-        # criterion = nn.MSELoss()
-        criterion = PhyNetLoss()
-
-        # optimizer = optim.SGD(self.parameters(), lr=0.01)
-        optimizer = optim.Adam(self.parameters(), lr=0.01)
-        gpu_device = get_device()
-        self.to(gpu_device)
-        progress_bar = tqdm(range(num_epochs), desc="Progress")
-        best_loss = 1
-        cache = Cache('model')
-        for epoch in progress_bar:
-            epoch_loss = 0
-            for batch_X, batch_y in dataloader:
-                batch_X = batch_X.to(gpu_device)
-                batch_y = batch_y.to(gpu_device)
-                outputs = self(batch_X)
-                loss = criterion(outputs, batch_y)
-                epoch_loss += loss.item()
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-            avg_loss = epoch_loss/len(dataloader)
-            print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss:.4f}')
-            if avg_loss <= best_loss:
-                best_loss = avg_loss
-                temp_model = copy.deepcopy(self)
-                temp_model.eval()
-                temp_model.to('cpu')
-                cache.save_model(temp_model)
-            if avg_loss < 0.1:
-                break
-        self.eval()
-        self.to('cpu')
-        print(f'train end.best loss {best_loss:.4f}')
 
 class EncoderBlock(torch.nn.Module):
     def __init__(self):
@@ -120,16 +75,4 @@ class ConvBlock3D(torch.nn.Module):
 
     def forward(self, x):
         return self.conv_block_3d(x)
-
-
-class PhyNetLoss(nn.Module):
-    def __init__(self):
-        super(PhyNetLoss, self).__init__()
-        self.neg_pearson_Loss = NegPearsonLoss()
-    def forward(self, predictions, targets):
-        if len(predictions.shape) == 1:
-            predictions = predictions.view(1, -1)
-        if len(targets.shape) == 1:
-            targets = targets.view(1, -1)
-        return self.neg_pearson_Loss(predictions, targets)
  

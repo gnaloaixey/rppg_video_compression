@@ -4,8 +4,17 @@ import shutil
 import yaml
 import torch
 from torch.utils.data import Dataset
-from util.read_file import generate_file_hash
-from singleton_pattern.load_config import get_config_hash
+from util.read_file import generate_dict_hash, generate_file_hash
+from singleton_pattern.load_config import get_config
+import enum
+
+class CacheType(enum.Enum):
+    TEST = 1
+    TRAIN = 2
+    MODEL = 3
+    RUNTIME = 4
+    RESULT = 5
+
 cache_root = 'cache'
 class Cache:
     @staticmethod
@@ -24,14 +33,33 @@ class Cache:
                 pass         
         pass
     file_path = None
-    info_name = 'info.yaml'
+    runtime_info_name = 'info.yaml'
     model_name = 'model.pkl'
-    def __init__(self,dataset_type) -> None:
+    def __init__(self,cache_type:CacheType) -> None:
         # Cache.clear_useless_cache()
-        file_hash = get_config_hash()
-        self.file_path = path.join(cache_root,file_hash,dataset_type)
+        hash_name = self.__get_hash_name(cache_type)
+        self.file_path = path.join(cache_root,cache_type.name,hash_name)
         makedirs(self.file_path, exist_ok=True)
-        print(self.file_path)
+        print(f'cache path:{self.file_path}')
+    def __get_hash_name(self,cache_type:CacheType):
+        content = get_config()
+        if cache_type == CacheType.MODEL:
+            return ''
+        if cache_type == CacheType.TEST or cache_type == CacheType.TRAIN:
+            dataset_type = cache_type.name.lower()
+            compression_config = content['data_format'].get('compression',{})
+            compress_config = compression_config if compression_config.get('enble',False) else {}
+            return generate_dict_hash({
+                'fps':content['data_format']['fps'],
+                'slice_interval':content['data_format']['slice_interval'],
+                'step':content['data_format']['step'],
+                'loader':content[dataset_type]['dataset']['loader'],
+                'path':content[dataset_type]['dataset']['path'],
+                **compress_config,
+            })
+        if cache_type == CacheType.RUNTIME:
+            return generate_dict_hash(content)
+        raise Exception('cache type error')
     def exist(self) -> bool:
         return path.exists(self.file_path) and path.isdir(self.file_path)
 
@@ -65,7 +93,7 @@ class Cache:
         return len(subdirectories)
     def save_cache_info(self,key,value):
         cache_data = {key: value}
-        with open(path.join(self.file_path,self.info_name), 'w',encoding='utf-8') as file:
+        with open(path.join(self.file_path,self.runtime_info_name), 'w',encoding='utf-8') as file:
             yaml.dump(cache_data, file, default_flow_style=False)
             file.close()
     def save_model(self,model:torch.nn.Module):
@@ -81,7 +109,7 @@ class Cache:
             file.close()
         return model
     def get_cache_info(self,key):
-        with open(path.join(self.file_path,self.info_name), 'r',encoding='utf-8') as file:
+        with open(path.join(self.file_path,self.runtime_info_name), 'r',encoding='utf-8') as file:
             cache_data = yaml.safe_load(file)
             file.close()
         if cache_data and key in cache_data:

@@ -7,8 +7,8 @@ from util.import_tqdm import tqdm
 from singleton_pattern import load_config
 from util.ppg_interpolat import generate_interpolated_ppg_by_video_capture
 from util.face_detection import get_face_shape
-from util.torch_info import get_device_str
-from util.cache import Cache,CacheDataset
+from util.cuda_info import get_device_str,get_cuda_index
+from util.cache import Cache,CacheDataset,CacheType
 
 class BaseDataGenerator:
     def __init__(self,dataset_type='train'):
@@ -20,15 +20,16 @@ class BaseDataGenerator:
         self.step = data_format['step']
 
         self.load_to_memory = config.get(dataset_type,{}).get('dataset',{}).get('load_to_memory',False)
+        self.force_clear_cache = config.get(dataset_type,{}).get('dataset',{}).get('force_clear_cache',False)
         
         pass
     def print_start_reading(self):
         print(f"Start Generator Data...")
     def get_tensor_dataloader(self,data:[np.array,np.array] or None,force_clear_cache = False,shuffle = False,num_workers=8,pin_memory=True,):
-        cache = Cache(self.dataset_type)
+        cache = Cache(CacheType.TRAIN if self.dataset_type == 'train' else CacheType.TEST)
         if force_clear_cache:
             cache.free()
-        if not cache.exist() or cache.size() == 0:
+        if not cache.exist() or cache.size() == 0 or self.force_clear_cache:
             self.__generate_cache__(data,cache)
         dataset = CacheDataset(cache,self.load_to_memory)
         print(f'dataset size: {len(dataset)}')
@@ -45,6 +46,16 @@ class BaseDataGenerator:
         step = int(self.step)
         slice_interval = int(self.slice_interval)
 
+        device_count = cv2.cuda.getCudaEnabledDeviceCount()
+        selected_device = get_cuda_index()
+        device_useful = False
+        if selected_device >=0 and selected_device < device_count:
+            device_useful = True
+        if not device_useful:
+            print("cv2: CUDA is not available.")
+        else:
+            device = cv2.cuda.Device(get_cuda_index())
+            ctx = device.createContext()
         dataset_index = 0
         progress_bar = tqdm(video_paths, desc="Progress")
         for i,video_path in enumerate(progress_bar):
@@ -53,6 +64,8 @@ class BaseDataGenerator:
             pass
             # open video
             video_capture = cv2.VideoCapture(compressed_path)
+            if device_useful:
+                video_capture.set(cv2.CAP_PROP_CUDA_MPS, 1)
             interpolated_ppg =  generate_interpolated_ppg_by_video_capture(ppgs[i],video_capture)
             # Set the frame rate of the video capture object
             video_capture.set(cv2.CAP_PROP_FPS, fps)

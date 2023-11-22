@@ -3,7 +3,7 @@ from data_generator.Base import BaseDataGenerator as Base
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import torch
-from util.torch_info import get_device
+from util.cuda_info import get_device
 class DataGenerator(Base):
     def __normalization__(self,X,y):
         sigma = 1
