@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.fft as fft
-from util.cache import Cache
-from util.import_tqdm import tqdm
+from common.cache import Cache
+from common.import_tqdm import tqdm
 from method.Base import BaseMethod
 
 

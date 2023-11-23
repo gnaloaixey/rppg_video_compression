@@ -4,7 +4,7 @@ import shutil
 import yaml
 import torch
 from torch.utils.data import Dataset
-from util.read_file import generate_dict_hash, generate_file_hash
+from common.read_file import generate_dict_hash, generate_file_hash
 from singleton_pattern.load_config import get_config
 import enum
 

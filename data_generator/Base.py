@@ -3,12 +3,12 @@ import torch
 from torch.utils.data import DataLoader
 import numpy as np
 from scipy.ndimage import gaussian_filter
-from util.import_tqdm import tqdm
+from common.import_tqdm import tqdm
 from singleton_pattern import load_config
-from util.ppg_interpolat import generate_interpolated_ppg_by_video_capture
-from util.face_detection import get_face_shape
-from util.cuda_info import get_device_str,get_cuda_index
-from util.cache import Cache,CacheDataset,CacheType
+from common.ppg_interpolat import generate_interpolated_ppg_by_video_capture
+from common.face_detection import get_face_shape
+from common.cuda_info import get_device_str,get_cuda_index
+from common.cache import Cache,CacheDataset,CacheType
 
 class BaseDataGenerator:
     def __init__(self,dataset_type='train'):
@@ -30,6 +30,8 @@ class BaseDataGenerator:
         if force_clear_cache:
             cache.free()
         if not cache.exist() or cache.size() == 0 or self.force_clear_cache:
+            if self.force_clear_cache:
+                cache.free()
             self.__generate_cache__(data,cache)
         dataset = CacheDataset(cache,self.load_to_memory)
         print(f'dataset size: {len(dataset)}')

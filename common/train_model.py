@@ -4,9 +4,9 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from singleton_pattern.load_config import get_config
 from importlib import import_module
-from util.cache import Cache,CacheType
-from util.import_tqdm import tqdm
-from util.cuda_info import get_device
+from common.cache import Cache,CacheType
+from common.import_tqdm import tqdm
+from common.cuda_info import get_device
 import matplotlib.pyplot as plt
 
 def run(model:nn.Module,train_dataloader:DataLoader,test_dataloader:DataLoader):
@@ -72,21 +72,21 @@ def run(model:nn.Module,train_dataloader:DataLoader,test_dataloader:DataLoader):
             if avg_loss <= best_loss and avg_test_loss <= best_test_loss:
                 best_loss = avg_loss
                 best_test_loss = avg_test_loss
-                best_epoch = epoch
+                best_epoch = epoch + 1
                 temp_model = copy.deepcopy(model)
                 temp_model.eval()
                 temp_model.to('cpu')
                 cache.save_model(temp_model)
-            print(f'Epoch [{epoch + 1}/{num_epochs}],Train Loss: {avg_loss:.4f},Test Loss: {avg_test_loss:.4f},Epoch {best_epoch}')
+            print(f'Epoch [{epoch + 1}/{num_epochs}],Train Loss: {avg_loss:.4f},Test Loss: {avg_test_loss:.4f}')
             if avg_loss < min_train_loss or avg_test_loss < min_test_loss:
                 break
         model.eval()
         model.to('cpu')
         __plot_loss(all_loss,all_test_loss)
-        print(f'train end: best loss {best_loss:.4f}, best test loss {best_test_loss:.4f}')
+        print(f'train end: best loss {best_loss:.4f}, best test loss {best_test_loss:.4f}, Epoch {best_epoch}')
         __print_used_time(start_time)
     except KeyboardInterrupt:
-        print(f'training is forcibly terminated: best loss {best_loss:.4f}, best test loss {best_test_loss:.4f}')
+        print(f'training is forcibly terminated: best loss {best_loss:.4f}, best test loss {best_test_loss:.4f}, Epoch {best_epoch}')
         __print_used_time(start_time)
         __plot_loss(all_loss,all_test_loss)
     pass

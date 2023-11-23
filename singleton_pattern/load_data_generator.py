@@ -1,7 +1,7 @@
 from importlib import import_module as __import_module
 from singleton_pattern import load_config as __load_config
 from data_generator.Base import BaseDataGenerator
-from util.static_var import StaticVar
+from common.context import Context
 
 def create_tensor_data_generator(dataset_type):
     __config = __load_config.get_config()
@@ -12,10 +12,10 @@ def create_tensor_data_generator(dataset_type):
     return DataGenerator(dataset_type)
 
 def get_train_data_generator() -> BaseDataGenerator:
-    if StaticVar.train_generator == None:
-        StaticVar.train_generator = create_tensor_data_generator('train')
-    return StaticVar.train_generator
+    if Context.train_generator == None:
+        Context.train_generator = create_tensor_data_generator('train')
+    return Context.train_generator
 def get_test_data_generator() -> BaseDataGenerator:
-    if StaticVar.test_generator == None:
-        StaticVar.test_generator = create_tensor_data_generator('test')
-    return StaticVar.test_generator
+    if Context.test_generator == None:
+        Context.test_generator = create_tensor_data_generator('test')
+    return Context.test_generator
