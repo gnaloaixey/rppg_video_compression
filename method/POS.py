@@ -1,7 +1,8 @@
 import torch
-from rppg.utils.funcs import detrend
+from common.filter import detrend
 from scipy import signal
 import numpy as np
+from common.cuda_info import get_device
 
 class POS(torch.nn.Module):
     def __init__(self):
@@ -12,11 +13,11 @@ class POS(torch.nn.Module):
 
     def forward(self,x):
 
-        x = torch.permute(x, (0, 2, 1, 3,4))  # (B, N, C)
+        x = torch.permute(x, (0, 2, 1, 3,4))  # (B, N, C, H, W)
         x = torch.mean(x, dim=(3, 4))
 
         batch_size, N, num_features = x.shape
-        H = torch.zeros(batch_size, 1, N).to("cuda")
+        H = torch.zeros(batch_size, 1, N).to(get_device())
 
         for b in range(batch_size):
             RGB = x[b]  # Assume RGB preprocessing already done
@@ -28,13 +29,14 @@ class POS(torch.nn.Module):
                 if m >= 0:
                     Cn = RGB[m:n, :] / torch.mean(RGB[m:n, :], dim=0)
                     Cn = torch.transpose(Cn, 0, 1)
-                    S = torch.matmul(torch.tensor([[0, 1, -1], [-2, 1, 1]], dtype=torch.float).to("cuda"), Cn)
+                    S = torch.matmul(torch.tensor([[0, 1, -1], [-2, 1, 1]], dtype=torch.float).to(get_device()), Cn)
                     h = S[0, :] + (torch.std(S[0, :]) / torch.std(S[1, :])) * S[1, :]
                     mean_h = torch.mean(h)
                     h = h - mean_h
                     H[b, 0, m:n] = H[b, 0, m:n] + h
 
         BVP = H.cpu().numpy()
+        print(BVP.shape)
         BVP = BVP.squeeze()
         b, a = signal.butter(1, [0.75 / self.fs * 2, 3 / self.fs * 2], btype='bandpass')
         for i in range(len(BVP)):

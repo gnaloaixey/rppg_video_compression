@@ -1,25 +1,53 @@
 cuda: 0
-method: GREEN
-num_epochs: 10
+method: PhysNet
 data_format:
     fps: 35
     batch_size: 1
-    slice_interval: 160
-    step: 20
+    slice_interval: 90
+    step: 70
+
 train: # Non-DNN method will ignore this parameter 'train'
+    num_epochs: 200
+    min_test_loss: 0.01
+    min_train_loss: 0.1
+    optim:
+        package: torch.optim
+        name: Adam
+        params:
+            lr: 0.01
+    loss:
+        package: loss.phys_net
+        name: PhyNetLoss
     dataset:
-        loader: UBFC_Phys
-        path: D:\BaiduNetdiskDownload\UBFC-PHYs_1-12
+        force_clear_cache: False
         load_to_memory: False
+        loader: UBFC_Phys
+        path: D:\BaiduNetdiskDownload\UBFC-PHYs_1-14
+        dataloader:
+            num_workers: 12
+            pin_memory: True
+            shuffle: False
+        compression:
+            enble: False
+            codec: MPV4
+            # zero means the original resolution of the video
+            resolution_ratio: 0
+            rate: 4000
 test:
     dataset:
+        force_clear_cache: False
         loader: UBFC_Phys
-        path: D:\BaiduNetdiskDownload\UBFC-PHYs_1-12
-        load_to_memory: False
-compression:
-    fps: 30
-    # zero means the original resolution of the video
-    resolution_ratio: 0
-    codec: MPV4
-    rate: 4000
+        path: D:\BaiduNetdiskDownload\UBFC-PHYs_14-16
+        load_to_memory: True
+        dataloader:
+            num_workers: 12
+            pin_memory: False
+            shuffle: False
+        compression:
+            enble: False
+            codec: MPV4
+            # zero means the original resolution of the video
+            resolution_ratio: 0
+            rate: 4000
+
     

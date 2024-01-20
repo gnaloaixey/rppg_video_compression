@@ -81,7 +81,6 @@ def run(model:nn.Module,train_dataloader:DataLoader,test_dataloader:DataLoader):
             if avg_loss < min_train_loss or avg_test_loss < min_test_loss:
                 break
         model.eval()
-        model.to('cpu')
         __plot_loss(all_loss,all_test_loss)
         print(f'train end: best loss {best_loss:.4f}, best test loss {best_test_loss:.4f}, Epoch {best_epoch}')
         __print_used_time(start_time)

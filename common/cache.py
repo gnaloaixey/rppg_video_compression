@@ -47,9 +47,10 @@ class Cache:
             return ''
         if cache_type == CacheType.TEST or cache_type == CacheType.TRAIN:
             dataset_type = cache_type.name.lower()
-            compression_config = content['data_format'].get('compression',{})
+            compression_config = content[dataset_type].get('dataset',{}).get('compression',{})
             compress_config = compression_config if compression_config.get('enble',False) else {}
             return generate_dict_hash({
+                'method':content['method'],
                 'fps':content['data_format']['fps'],
                 'slice_interval':content['data_format']['slice_interval'],
                 'step':content['data_format']['step'],
@@ -128,8 +129,8 @@ class CacheDataset(Dataset):
             print('loading to memory...')
             for index in range(cache.size()):
                 X,y = self.__cache.read(index)
-                tensor_X.append(X)
-                tensor_y.append(y)
+                tensor_X.append(torch.tensor(X).float())
+                tensor_y.append(torch.tensor(y).float())
             self.__tensor_X = tensor_X
             self.__tensor_y = tensor_y
             print('load end')

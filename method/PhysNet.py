@@ -15,7 +15,9 @@ class PhysNet(BaseMethod):
 
     def forward(self, x):
         [batch, channel, length, width, height] = x.shape
-        return self.physnet(x).view(-1, length)
+        predictions = self.physnet(x).view(-1, length)
+        predictions = (predictions - torch.mean(predictions, dim=-1, keepdim=True)) / torch.std(predictions, dim=-1,keepdim=True)
+        return predictions
 
 
 class EncoderBlock(torch.nn.Module):
