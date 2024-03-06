@@ -7,6 +7,7 @@ config/*.yaml
 !config/config.yaml
 
 cache/**
+out/**
 # Virtual Environment
 venv/
 venv2/

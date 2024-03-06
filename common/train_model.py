@@ -8,6 +8,7 @@ from common.cache import Cache,CacheType
 from common.import_tqdm import tqdm
 from common.cuda_info import get_device
 import matplotlib.pyplot as plt
+from common.cache import Cache,CacheDataset,CacheType
 
 def run(model:nn.Module,train_dataloader:DataLoader,test_dataloader:DataLoader):
     start_time = datetime.datetime.now()
@@ -90,12 +91,16 @@ def run(model:nn.Module,train_dataloader:DataLoader,test_dataloader:DataLoader):
         __plot_loss(all_loss,all_test_loss)
     pass
 def __plot_loss(all_loss,all_test_loss):
-    plt.title("trend of loss")
+    name = get_config().get('method','')
+    cache = Cache(CacheType.MODEL)
+    file_path = cache.file_path + cache.model_name + '.svg'
+    plt.title(f"{name} trend of loss")
     plt.xlabel("epoch")
     plt.ylabel("loss")
     plt.plot(all_loss,label="train")
     plt.plot(all_test_loss,label="test")
     plt.legend()
+    plt.savefig(file_path)
     plt.show()
 def __print_used_time(start_time):
     runtime = datetime.datetime.now() - start_time

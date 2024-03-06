@@ -1,10 +1,9 @@
 # Experiment
-
+##
+The project only publishes the project framework, and the algorithms for individual research reproduction are not uploaded and published.
 ## dataset loaer
 
-dataset => DataFrame
-| video_path |
-| |
+
 
 ## 运行
 
@@ -14,6 +13,7 @@ dataset => DataFrame
 conda create -n compression python=3.8.18
 conda activate compression
 ```
+### 安装显卡驱动相应的 cuda、cuDNN
 
 ### 根据 cuda 安装相应 pytorch 的版本
 

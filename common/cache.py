@@ -40,6 +40,7 @@ class Cache:
         hash_name = self.__get_hash_name(cache_type)
         self.file_path = path.join(cache_root,cache_type.name,hash_name)
         makedirs(self.file_path, exist_ok=True)
+        self.model_name = get_config().get('method','model') + '.pkl'
         print(f'cache path:{self.file_path}')
     def __get_hash_name(self,cache_type:CacheType):
         content = get_config()
