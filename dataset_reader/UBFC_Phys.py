@@ -9,12 +9,13 @@ class DatasetReader(BaseDatasetReader):
     root = ''
     loader_name = 'UBFC_Phys'
     data_type = 1
-    def load_data(self):
+    def load_data(self,print_info = True):
         list_of_video_path = []
         list_of_ppg_data = []
         contents = os.listdir(self.root)
-        self.print_start_reading()
-        progress_bar = tqdm(contents, desc="Progress")
+        if print_info:
+            self.print_start_reading()
+        progress_bar = tqdm(contents, desc="Progress") if print_info else contents
         for content in progress_bar:
             content_path = os.path.join(self.root, content)  # 获取内容的完整路径
             for root, dirs, files in os.walk(content_path):
@@ -30,8 +31,9 @@ class DatasetReader(BaseDatasetReader):
                 if os.path.exists(rgb_video_path) and os.path.exists(ppg_data_path):
                     list_of_video_path.append(rgb_video_path)
                     list_of_ppg_data.append( self.__ppg_reader(ppg_data_path))
-        progress_bar.clear()
-        progress_bar.close()
+        if print_info:
+            progress_bar.clear()
+            progress_bar.close()
         return np.array(list_of_video_path),np.array(list_of_ppg_data)
     def __ppg_reader(self,path):
         ppg_df = pd.read_csv(path,header=None)

@@ -38,3 +38,4 @@ conda install -c conda-forge dlib
 # 其他依赖
 conda env update --file .\compression.yml
 ```
+### 编译安装支持的 ffmpeg

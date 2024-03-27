@@ -1,5 +1,6 @@
 import copy
 import datetime
+import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from singleton_pattern.load_config import get_config
@@ -9,7 +10,6 @@ from common.import_tqdm import tqdm
 from common.cuda_info import get_device
 import matplotlib.pyplot as plt
 from common.cache import Cache,CacheDataset,CacheType
-
 def run(model:nn.Module,train_dataloader:DataLoader,test_dataloader:DataLoader):
     start_time = datetime.datetime.now()
     try:
@@ -35,6 +35,7 @@ def run(model:nn.Module,train_dataloader:DataLoader,test_dataloader:DataLoader):
         loss_model_file = import_module(loss_package)
         Loss = getattr(loss_model_file,loss_name)
         criterion = Loss()
+        test_criterion = Loss()
 
         print(f'optimizer:{optimizer}\ncriterion:{criterion}')
 
@@ -63,13 +64,14 @@ def run(model:nn.Module,train_dataloader:DataLoader,test_dataloader:DataLoader):
             avg_loss = epoch_loss/len(train_dataloader)
             all_loss.append(avg_loss)
             model.eval()
-            for batch_X, batch_y in test_dataloader:
-                batch_X = batch_X.to(gpu_device)
-                batch_y = batch_y.to(gpu_device)
-                outputs = model(batch_X)
-                test_loss += criterion(outputs, batch_y).item()
-            avg_test_loss = test_loss/len(test_dataloader)
-            all_test_loss.append(avg_test_loss)
+            with torch.no_grad():
+                for batch_X, batch_y in test_dataloader:
+                    batch_X = batch_X.to(gpu_device)
+                    batch_y = batch_y.to(gpu_device)
+                    outputs = model(batch_X)
+                    test_loss += test_criterion(outputs, batch_y).item()
+                avg_test_loss = test_loss/len(test_dataloader)
+                all_test_loss.append(avg_test_loss)
             if avg_loss <= best_loss and avg_test_loss <= best_test_loss:
                 best_loss = avg_loss
                 best_test_loss = avg_test_loss

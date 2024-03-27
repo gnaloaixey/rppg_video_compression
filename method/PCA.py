@@ -1,5 +1,7 @@
 import torch
 from sklearn.decomposition import PCA as skpca
+import numpy as np
+from common.filter import lowpass_filter
 
 class PCA(torch.nn.Module):
     def __init__(self):
@@ -14,6 +16,10 @@ class PCA(torch.nn.Module):
             X = x[i]
             pca = skpca(n_components=3)
             pca.fit(X.cpu().numpy())
-            bvp.append(torch.from_numpy(pca.components_[1] * pca.explained_variance_[1]).to(x.device))
+            data = pca.components_[1] * pca.explained_variance_[1]
+            t,data = lowpass_filter(data, fs=35.0, cutoff_freq=3, order=5)
+            # y_2 = (y_2 - y_2.mean())/y_2.std()
+            data = (data - data.min())/(data.max() -data.min())
+            bvp.append(torch.from_numpy(data).to(x.device))
         bvp = torch.stack(bvp)
         return bvp

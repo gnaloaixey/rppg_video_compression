@@ -8,7 +8,7 @@ class DataGenerator(Base):
         X = X/255
         y = (y - y.min())/(y.max() -y.min())
         return X,y
-    def __face_factor_extraction__(self,frame,shape):
+    def __face_factor_extraction__(self,frame,face,shape):
         height, width, _ = frame.shape
         if height < 128 or width < 128:
             raise RuntimeError('image too small')

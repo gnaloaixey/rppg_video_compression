@@ -7,7 +7,7 @@ import os
 
 __root_dir = 'config'
 __default_config_name = 'config.yaml'
-def run(config_name = __default_config_name):
+def run(config_name = __default_config_name,print_info_or_not = True):
     Context.clear_var()
     global __root_dir
     global __default_config_name
@@ -20,8 +20,6 @@ def run(config_name = __default_config_name):
     with open('non_dnn_method_list.txt', 'r') as file:
         Context.non_dnn_method_list = [line.strip() for line in file if line.strip()]
     Context.config_hash = generate_file_hash(config_path)
-
-
-    print_info()
-
-    print(f'Method and DataGenerator Name: {Context.config["method"]}')
+    if print_info_or_not:
+        print_info()
+        print(f'Method and DataGenerator Name: {Context.config["method"]}')

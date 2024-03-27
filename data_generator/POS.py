@@ -6,12 +6,12 @@ import torch
 from common.cuda_info import get_device
 class DataGenerator(Base):
     def __normalization__(self,X,y):
-        # (T, C, H,W)
-        X = X.transpose((0, 3, 1,2))
+        # T,C,W,H
+        X = X.transpose((0, 3, 2, 1))
         X = X/255
         y = (y - y.min())/(y.max() -y.min())
         return X,y
-    def __face_factor_extraction__(self,frame,shape):
+    def __face_factor_extraction__(self,frame,face,shape):
         left_eye_pt = shape[40]
         right_eye_pt = shape[43]
         left_eye_x = left_eye_pt['x']

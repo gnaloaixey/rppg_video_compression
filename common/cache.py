@@ -7,6 +7,9 @@ from torch.utils.data import Dataset
 from common.read_file import generate_dict_hash, generate_file_hash
 from singleton_pattern.load_config import get_config
 import enum
+import datetime
+import threading
+import random
 
 class CacheType(enum.Enum):
     TEST = 1
@@ -14,6 +17,7 @@ class CacheType(enum.Enum):
     MODEL = 3
     RUNTIME = 4
     RESULT = 5
+    TEST_SYNC = 6
 
 cache_root = 'cache'
 class Cache:
@@ -35,6 +39,9 @@ class Cache:
     file_path = None
     runtime_info_name = 'info.yaml'
     model_name = 'model.pkl'
+    '''
+        cache_type 决定缓存的位置
+    '''
     def __init__(self,cache_type:CacheType) -> None:
         # Cache.clear_useless_cache()
         hash_name = self.__get_hash_name(cache_type)
@@ -59,8 +66,12 @@ class Cache:
                 'path':content[dataset_type]['dataset']['path'],
                 **compress_config,
             })
-        if cache_type == CacheType.RUNTIME:
-            return generate_dict_hash(content)
+        if cache_type == CacheType.TEST_SYNC or cache_type == CacheType.RUNTIME:
+            return generate_dict_hash({
+                'current_time':datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+                'thread_id':str(threading.get_ident()),
+                'random_number':random.randint(1000, 9999)
+            })
         raise Exception('cache type error')
     def exist(self) -> bool:
         return path.exists(self.file_path) and path.isdir(self.file_path)

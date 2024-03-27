@@ -1,10 +1,13 @@
 import torch
+from common.filter import lowpass_filter
 from method.Base import BaseMethod
-
+from singleton_pattern import load_config
 
 class PhysNet(BaseMethod):
     def __init__(self):
         super().__init__()
+        config = load_config.get_config()
+        self.fs = config['data_format']['fps']
         self.physnet = torch.nn.Sequential(
             EncoderBlock(),
             decoder_block(),
@@ -16,6 +19,13 @@ class PhysNet(BaseMethod):
     def forward(self, x):
         [batch, channel, length, width, height] = x.shape
         predictions = self.physnet(x).view(-1, length)
+        predictions = predictions.detach().cpu().numpy()
+        for b in range(batch):
+            t,prediction = lowpass_filter(predictions[0], fs=self.fs, cutoff_freq=3.3, order=5)
+            predictions[b] = prediction
+        predictions = torch.from_numpy(predictions)
+        predictions.requires_grad = True
+        predictions = predictions.to(x.device)
         predictions = (predictions - torch.mean(predictions, dim=-1, keepdim=True)) / torch.std(predictions, dim=-1,keepdim=True)
         return predictions
 
