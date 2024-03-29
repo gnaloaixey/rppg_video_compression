@@ -19,13 +19,11 @@ class PhysNet(BaseMethod):
     def forward(self, x):
         [batch, channel, length, width, height] = x.shape
         predictions = self.physnet(x).view(-1, length)
-        predictions = predictions.detach().cpu().numpy()
+        cals = predictions.detach().cpu().numpy()
         for b in range(batch):
-            t,prediction = lowpass_filter(predictions[0], fs=self.fs, cutoff_freq=3.3, order=5)
-            predictions[b] = prediction
-        predictions = torch.from_numpy(predictions)
-        predictions.requires_grad = True
-        predictions = predictions.to(x.device)
+            t,cal = lowpass_filter(cals[b], fs=self.fs, cutoff_freq=3.3, order=5)
+            cals[b][:] = cal
+        predictions.data = torch.tensor(cals,device=predictions.device)
         predictions = (predictions - torch.mean(predictions, dim=-1, keepdim=True)) / torch.std(predictions, dim=-1,keepdim=True)
         return predictions
 
