@@ -1,15 +1,15 @@
 cuda: 0
 method: PhysNet
 data_format:
-    fps: 35
+    fps: 30
     batch_size: 1
     slice_interval: 90
-    step: 70
+    step: 40
 
 train: # Non-DNN method will ignore this parameter 'train'
-    num_epochs: 200
-    min_test_loss: 0.01
-    min_train_loss: 0.1
+    num_epochs: 500
+    min_test_loss: 0.11
+    min_train_loss: 0.09
     optim:
         package: torch.optim
         name: Adam
@@ -22,32 +22,26 @@ train: # Non-DNN method will ignore this parameter 'train'
         force_clear_cache: False
         load_to_memory: False
         loader: UBFC_Phys
-        path: D:\BaiduNetdiskDownload\UBFC-PHYs_1-14
+        path: D:\dataset\compression\UBFC-PHYs
+        # loader: ZJXU
+        # path: D:\dataset\compression\ZJXU\stationary
+        # path: D:\dataset\compression\ZJXU\wark
         dataloader:
             num_workers: 12
             pin_memory: True
             shuffle: False
-        compression:
-            enble: False
-            codec: MPV4
-            # zero means the original resolution of the video
-            resolution_ratio: 0
-            rate: 4000
 test:
     dataset:
         force_clear_cache: False
         loader: UBFC_Phys
-        path: D:\BaiduNetdiskDownload\UBFC-PHYs_14-16
-        load_to_memory: True
+        path: D:\dataset\compression\UBFC-PHYs_test
+        # loader: ZJXU
+        # path: D:\dataset\compression\ZJXU\stationary_test
+        # path: D:\dataset\compression\ZJXU\wark_test
+        load_to_memory: False
         dataloader:
             num_workers: 12
             pin_memory: False
             shuffle: False
-        compression:
-            enble: False
-            codec: MPV4
-            # zero means the original resolution of the video
-            resolution_ratio: 0
-            rate: 4000
 
     

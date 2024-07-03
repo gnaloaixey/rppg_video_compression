@@ -14,7 +14,7 @@ class DataGenerator(Base):
         # 获取人脸区域的左上角和右下角坐标
         top_left = (face.left(), face.top())
         bottom_right = (face.right(), face.bottom())
-        frame_face = frame[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+        # frame_face = frame[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
 
         # cv2.rectangle(frame,(face.left(),face.top()),(face.right(),face.bottom()),0xff0000)
         # cv2.imshow('Video', frame_face)
@@ -22,6 +22,6 @@ class DataGenerator(Base):
 
         target_height = 128
         target_width = 128
-        frame_face = cv2.resize(frame_face, (target_width, target_height),interpolation=cv2.INTER_CUBIC)
+        frame_face = cv2.resize(frame, (target_width, target_height),interpolation=cv2.INTER_CUBIC)
 
         return frame_face

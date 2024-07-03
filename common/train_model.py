@@ -15,8 +15,8 @@ def run(model:nn.Module,train_dataloader:DataLoader,test_dataloader:DataLoader):
     try:
         train_config = get_config().get('train',{})
         num_epochs = train_config.get('num_epochs',10)
-        min_test_loss = train_config.get('',0.01)
-        min_train_loss = train_config.get('',0.01)
+        min_test_loss = train_config.get('min_test_loss',0.01)
+        min_train_loss = train_config.get('min_train_loss',0.01)
 
         optim_config = train_config.get('optim',{})
         optim_package = optim_config.get('package','torch.optim')
@@ -81,7 +81,7 @@ def run(model:nn.Module,train_dataloader:DataLoader,test_dataloader:DataLoader):
                 temp_model.to('cpu')
                 cache.save_model(temp_model)
             print(f'Epoch [{epoch + 1}/{num_epochs}],Train Loss: {avg_loss:.4f},Test Loss: {avg_test_loss:.4f}')
-            if avg_loss < min_train_loss or avg_test_loss < min_test_loss:
+            if avg_loss < min_train_loss and avg_test_loss < min_test_loss:
                 break
         model.eval()
         __plot_loss(all_loss,all_test_loss)

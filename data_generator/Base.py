@@ -67,11 +67,11 @@ class BaseDataGenerator:
             pass
             # open video
             video_capture = cv2.VideoCapture(compressed_path)
+            video_capture.set(cv2.CAP_PROP_FPS, fps)
             if device_useful:
                 video_capture.set(cv2.CAP_PROP_CUDA_MPS, 1)
             interpolated_ppg =  generate_interpolated_ppg_by_video_capture(ppgs[i],video_capture)
             # Set the frame rate of the video capture object
-            video_capture.set(cv2.CAP_PROP_FPS, fps)
 
             y_queue = list()
             factor_queue = list()

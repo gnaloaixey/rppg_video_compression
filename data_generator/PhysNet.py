@@ -7,6 +7,7 @@ class DataGenerator(Base):
         X = X.transpose((3, 0, 2, 1))
         X = X/255
         y = (y - y.min())/(y.max() -y.min())
+        y = (y-y.mean())/y.std()
         return X,y
     def __face_factor_extraction__(self,frame,face,shape):
         height, width, _ = frame.shape

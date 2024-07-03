@@ -19,7 +19,7 @@ class CacheType(enum.Enum):
     RESULT = 5
     TEST_SYNC = 6
 
-cache_root = 'cache'
+cache_root = 'E:\cache'
 class Cache:
     @staticmethod
     def clear_useless_cache():
