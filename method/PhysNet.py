@@ -24,7 +24,7 @@ class PhysNet(BaseMethod):
         #     t,cal = lowpass_filter(cals[b], fs=self.fs, cutoff_freq=3.3, order=5)
         #     cals[b][:] = cal
         # predictions.data = torch.tensor(cals,device=predictions.device)
-        predictions = (predictions - torch.mean(predictions, dim=-1, keepdim=True)) / torch.std(predictions, dim=-1,keepdim=True)
+        # predictions = (predictions - torch.mean(predictions, dim=-1, keepdim=True)) / torch.std(predictions, dim=-1,keepdim=True)
         return predictions
 
 

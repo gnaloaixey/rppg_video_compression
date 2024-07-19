@@ -8,7 +8,7 @@ from dataset_reader.Base import BaseDatasetReader
 class DatasetReader(BaseDatasetReader):
     root = ''
     loader_name = 'UBFC_Phys'
-    data_type = 3
+    data_type = 1
     def load_data(self,print_info = True):
         list_of_video_path = []
         list_of_ppg_data = []

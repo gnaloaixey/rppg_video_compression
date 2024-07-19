@@ -34,7 +34,7 @@ conda install pytorch==1.12.0 torchvision==0.13.0 torchaudio==0.12.0 cpuonly -c 
 
 ```
 # dlib
-conda install -c conda-forge dlib
+conda install -c conda-forge dlib=19.24.0
 # 其他依赖
 conda env update --file .\compression.yml
 ```

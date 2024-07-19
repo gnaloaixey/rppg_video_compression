@@ -66,9 +66,3 @@ class POS(torch.nn.Module):
         BVP = Hs.copy()
         BVP = torch.from_numpy(BVP.copy()).view(batch_size, -1)
         return BVP
-    
-def get_model():
-    return POS()
-
-def factor_generator():
-    pass
